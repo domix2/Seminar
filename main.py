@@ -7,6 +7,11 @@ import sqlite3
 
 pygame.font.init()
 
+conn = sqlite3.connect("igra.db")
+c = conn.cursor()
+
+c.execute("CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, score INTEGER, level INTEGER)")
+
 # Postavljanje prozora i sve vezano za njega
 WIDTH, HEIGHT = 750, 750
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -30,12 +35,15 @@ YELLOW_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_yellow.png"
 # Učitavanje pozadinske slike
 Background = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background-black.png")), (WIDTH, HEIGHT))
 
-conn = sqlite3.connect("igra.db")
-c = conn.cursor()
 
-c.execute("CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, score INTEGER, level INTEGER)")
 
 def save_name(player_name,score,level):
+    c.execute("SELECT COUNT(*) FROM players")
+    row_count = c.fetchone()[0]
+    max_rows = 9
+    if row_count >= max_rows:
+        excess_rows = row_count - max_rows + 1
+        c.execute(f"DELETE FROM players WHERE id IN (SELECT id FROM players ORDER BY id ASC LIMIT {excess_rows})")
 
     c.execute("INSERT INTO players (name, score, level) VALUES (?, ?, ?)", (player_name,score,level))
     conn.commit()
@@ -234,7 +242,7 @@ def main():
     main_font = pygame.font.SysFont("arial", 30)
     lost_font = pygame.font.SysFont("arial", 40)
 
-    num_players = 0
+
     enemies = []
     wave_length = 5
     enemy_vel = 1
