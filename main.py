@@ -36,14 +36,17 @@ c = conn.cursor()
 c.execute("CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, score INTEGER, level INTEGER)")
 
 def save_name(player_name,score,level):
+
     c.execute("INSERT INTO players (name, score, level) VALUES (?, ?, ?)", (player_name,score,level))
     conn.commit()
+    player_id = c.lastrowid
     popup_font = pygame.font.SysFont("Arial", 30)
     popup_text = popup_font.render("Name saved successfully!", True, (255, 255, 255))
     WINDOW.blit(Background, (0, 0))
     WINDOW.blit(popup_text, (WIDTH / 2 - popup_text.get_width() / 2, HEIGHT / 2 - popup_text.get_height() / 2))
     pygame.display.update()
     time.sleep(2)
+    return player_id
 class Laser:
     def __init__(self, x, y, img):
         self.x = x
@@ -168,10 +171,8 @@ def collide(obj1, obj2):
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
 
 def game_over(player,level):
-    global player_name, player_level
     run = True
     button_font = pygame.font.SysFont("Arial", 40)
-    player_name = ""
     input_box = pygame.Rect(WIDTH / 2 - 100, HEIGHT / 2, 200, 50)
     input_box_color = (255, 255, 255)
     input_text = ""
@@ -221,6 +222,10 @@ def game_over(player,level):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+
+        WINDOW.blit(Background, (0, 0))
+        main_menu()
+        pygame.display.update()
 def main():
     run = True
     FPS = 60
@@ -229,7 +234,7 @@ def main():
     main_font = pygame.font.SysFont("arial", 30)
     lost_font = pygame.font.SysFont("arial", 40)
 
-    high_scores = []
+    num_players = 0
     enemies = []
     wave_length = 5
     enemy_vel = 1
@@ -330,7 +335,7 @@ def main_menu():
     title_font = pygame.font.SysFont("Arial" , 50)
     button_font = pygame.font.SysFont("Arial", 30)
     main_font = pygame.font.SysFont("Arial", 30)
-
+    global player_id
     # Quit button parameters
     quit_button_width = 200
     quit_button_height = 50
@@ -340,6 +345,7 @@ def main_menu():
     quit_button_rect = pygame.Rect(quit_button_x, quit_button_y, quit_button_width, quit_button_height)
     quit_button_color = (255, 0, 0)
     quit_button_text = main_font.render("Quit", True, (255, 255, 255))
+
     run = True
     while run:
         WINDOW.blit(Background, (0, 0))
@@ -383,9 +389,15 @@ def main_menu():
                         sys.exit()
                     if highscore_button.collidepoint(mouse_pos):
                         if pygame.mouse.get_pressed()[0] == 1:
+                            high_scores = get_high_scores()
                             display_highscores()
 
 
+
+def get_high_scores():
+    c.execute("SELECT * FROM players ORDER BY score DESC LIMIT 5")  # Get the top 5 high scores
+    high_scores = c.fetchall()
+    return high_scores
 def display_highscores():
     conn = sqlite3.connect("igra.db")
     c = conn.cursor()
@@ -409,19 +421,20 @@ def display_highscores():
         title_label = title_font.render("Highscores", 1, (255, 255, 255))
         WINDOW.blit(title_label, (WIDTH / 2 - title_label.get_width() / 2, 50))
 
-        return_button = pygame.Rect(WIDTH / 2 - 100, HEIGHT / 2 + 100, 200, 50)
+        return_button = pygame.Rect(WIDTH / 2 - 100, HEIGHT / 2 + 250, 200, 50)
         pygame.draw.rect(WINDOW, (128, 128, 128), return_button)
         pygame.draw.rect(WINDOW, (255, 255, 255), return_button, 3)
         return_label = button_font.render("Return", 1, (255, 255, 255))
-        WINDOW.blit(return_label, (WIDTH / 2 - return_label.get_width() / 2, HEIGHT / 2 + 110))
+        WINDOW.blit(return_label, (WIDTH / 2 - return_label.get_width() / 2, HEIGHT / 2 + 255))
 
         y_offset = 150
         for score in highscores:
+            player_id = score[0]
             player_name = score[1]
             player_score = score[2]
             player_level = score[3]
 
-            score_label = main_font.render(f"{player_name} - Score: {player_score} - Level: {player_level}", 1,
+            score_label = main_font.render(f"{player_id}. {player_name} - Score: {player_score} - Level: {player_level}", 1,
                                            (255, 255, 255))
             WINDOW.blit(score_label, (WIDTH / 2 - score_label.get_width() / 2, y_offset))
             y_offset += 50
