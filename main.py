@@ -5,15 +5,15 @@ import time
 import random
 import sqlite3 
 from igrica.utillities import collide
-from igrica.laser import Laser
-from igrica import Enemy, Player, Ship
+from igrica import Enemy, Player
 
 pygame.font.init()
 
 conn = sqlite3.connect("igra.db")
 c = conn.cursor()
 
-c.execute("CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, score INTEGER, level INTEGER)")
+c.execute("CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, score INTEGER, level "
+          "INTEGER)")
 
 # Postavljanje prozora i sve vezano za njega
 WIDTH, HEIGHT = 750, 750
@@ -38,7 +38,7 @@ YELLOW_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_yellow.png"
 # Učitavanje pozadinske slike
 Background = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background-black.png")), (WIDTH, HEIGHT))
 
-def save_name(player_name,score,level):
+def save_name(player_name, score, level):
     c.execute("SELECT COUNT(*) FROM players")
     row_count = c.fetchone()[0]
     max_rows = 9
@@ -46,7 +46,7 @@ def save_name(player_name,score,level):
         excess_rows = row_count - max_rows + 1
         c.execute(f"DELETE FROM players WHERE id IN (SELECT id FROM players ORDER BY id ASC LIMIT {excess_rows})")
 
-    c.execute("INSERT INTO players (name, score, level) VALUES (?, ?, ?)", (player_name,score,level))
+    c.execute("INSERT INTO players (name, score, level) VALUES (?, ?, ?)", (player_name, score, level))
     conn.commit()
     player_id = c.lastrowid
     popup_font = pygame.font.SysFont("Arial", 30)
@@ -57,9 +57,8 @@ def save_name(player_name,score,level):
     time.sleep(2)
     return player_id
 
-def game_over(player,level):
+def game_over(player, level):
     run = True
-    button_font = pygame.font.SysFont("Arial", 40)
     input_box = pygame.Rect(WIDTH / 2 - 100, HEIGHT / 2, 200, 50)
     input_box_color = (255, 255, 255)
     input_text = ""
@@ -71,7 +70,6 @@ def game_over(player,level):
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
@@ -99,10 +97,10 @@ def game_over(player,level):
         pygame.display.update()
 
     run = True
-    start_time = pygame.time.get_ticks()  # Get the current time in milliseconds
+    start_time = pygame.time.get_ticks()
     while run:
-        current_time = pygame.time.get_ticks()  # Get the current time in milliseconds
-        if current_time - start_time >= 3000:  # Check if 3 seconds have passed
+        current_time = pygame.time.get_ticks()
+        if current_time - start_time >= 3000:
             main_menu()
             run = False
 
@@ -114,6 +112,7 @@ def game_over(player,level):
         main_menu()
         pygame.display.update()
 def main():
+
     run = True
     FPS = 60
     level = 0
@@ -121,11 +120,9 @@ def main():
     main_font = pygame.font.SysFont("arial", 30)
     lost_font = pygame.font.SysFont("arial", 40)
 
-
     enemies = []
     wave_length = 5
     enemy_vel = 1
-
 
     player_vel = 5
     laser_vel = 5
@@ -135,10 +132,10 @@ def main():
     lost = False
     lost_count = 0
 
-    def redraw_window(): # funkcija zadužena za prikaz svega na prozoru
+    def redraw_window():  # funkcija zadužena za prikaz svega na prozoru
         WINDOW.blit(Background, (0, 0))
         #ispis teksta na ekranu
-        lives_label = main_font.render(f"Lives: {lives}", 1, (255,255,255)) # pogledati na netu RGB kodove
+        lives_label = main_font.render(f"Lives: {lives}", 1, (255,255,255))  # pogledati na netu RGB kodove
         level_label = main_font.render(f"Level: {level}", 1, (255,255,255))
 
         WINDOW.blit(lives_label, (10, 10))
@@ -183,16 +180,16 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False # omogućuje ako igrač pritisne x za izlazak iz igre - igrica se gasi
+                run = False  # omogućuje ako igrač pritisne x za izlazak iz igre - igrica se gasi
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and player.x - player_vel > 0: # Pomak ulijevo
+        if keys[pygame.K_a] and player.x - player_vel > 0:  # Pomak ulijevo
             player.x -= player_vel
-        if keys[pygame.K_d] and player.x + player_vel + player.get_width() < WIDTH: # Pomak udesno
+        if keys[pygame.K_d] and player.x + player_vel + player.get_width() < WIDTH:  # Pomak udesno
             player.x += player_vel
-        if keys[pygame.K_w] and player.y + player_vel > 0: # Pomak prema gore
+        if keys[pygame.K_w] and player.y + player_vel > 0:  # Pomak prema gore
             player.y -= player_vel
-        if keys[pygame.K_s] and player.y + player_vel + player.get_height() + 15 < HEIGHT: # Pomak prema dolje
+        if keys[pygame.K_s] and player.y + player_vel + player.get_height() + 15 < HEIGHT:  # Pomak prema dolje
             player.y += player_vel
         if keys[pygame.K_SPACE]:
             player.shoot()
@@ -222,7 +219,9 @@ def main_menu():
     title_font = pygame.font.SysFont("Arial" , 50)
     button_font = pygame.font.SysFont("Arial", 30)
     main_font = pygame.font.SysFont("Arial", 30)
+
     global player_id
+
     # Quit button parameters
     quit_button_width = 200
     quit_button_height = 50
@@ -259,7 +258,6 @@ def main_menu():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
                 pygame.quit()
                 sys.exit()
 
@@ -271,16 +269,12 @@ def main_menu():
                         main()
 
                     if quit_button_rect.collidepoint(mouse_pos):
-                        run = False
                         pygame.quit()
                         sys.exit()
                     if highscore_button.collidepoint(mouse_pos):
                         if pygame.mouse.get_pressed()[0] == 1:
                             high_scores = get_high_scores()
                             display_highscores()
-
-
-
 def get_high_scores():
     c.execute("SELECT * FROM players ORDER BY score DESC LIMIT 5")  # Get the top 5 high scores
     high_scores = c.fetchall()
@@ -321,7 +315,8 @@ def display_highscores():
             player_score = score[2]
             player_level = score[3]
 
-            score_label = main_font.render(f"{player_id}. {player_name} - Score: {player_score} - Level: {player_level}", 1,
+            score_label = main_font.render(f"{player_id}. {player_name} - Score: {player_score} - Level: {player_level}"
+                                           , 1,
                                            (255, 255, 255))
             WINDOW.blit(score_label, (WIDTH / 2 - score_label.get_width() / 2, y_offset))
             y_offset += 50
@@ -333,7 +328,7 @@ def display_highscores():
                         run = False
         pygame.display.update()
 
-main_menu()
+main_menu ()
 conn.close()
 
 
