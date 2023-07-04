@@ -38,79 +38,6 @@ YELLOW_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_yellow.png"
 # Učitavanje pozadinske slike
 Background = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background-black.png")), (WIDTH, HEIGHT))
 
-def save_name(player_name, score, level):
-    c.execute("SELECT COUNT(*) FROM players")
-    row_count = c.fetchone()[0]
-    max_rows = 9
-    if row_count >= max_rows:
-        excess_rows = row_count - max_rows + 1
-        c.execute(f"DELETE FROM players WHERE id IN (SELECT id FROM players ORDER BY id ASC LIMIT {excess_rows})")
-
-    c.execute("INSERT INTO players (name, score, level) VALUES (?, ?, ?)", (player_name, score, level))
-    conn.commit()
-    player_id = c.lastrowid
-    popup_font = pygame.font.SysFont("Arial", 30)
-    popup_text = popup_font.render("Name saved successfully!", True, (255, 255, 255))
-    WINDOW.blit(Background, (0, 0))
-    WINDOW.blit(popup_text, (WIDTH / 2 - popup_text.get_width() / 2, HEIGHT / 2 - popup_text.get_height() / 2))
-    pygame.display.update()
-    time.sleep(2)
-    return player_id
-
-def game_over(player, level):
-    run = True
-    input_box = pygame.Rect(WIDTH / 2 - 100, HEIGHT / 2, 200, 50)
-    input_box_color = (255, 255, 255)
-    input_text = ""
-    input_font = pygame.font.SysFont("Arial", 30)
-    text_surface = input_font.render("Enter your name:", True, (255, 255, 255))
-
-    name_saved = False
-
-    while run:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    if input_text != "":
-                        save_name(input_text, player.score, level)
-                        name_saved = True
-                        run = False
-                elif event.key == pygame.K_BACKSPACE:
-                    input_text = input_text[:-1]
-                else:
-                    input_text += event.unicode
-
-        WINDOW.blit(Background, (0, 0))
-
-        if not name_saved:
-            pygame.draw.rect(WINDOW, input_box_color, input_box)
-            pygame.draw.rect(WINDOW, (0, 0, 0), input_box, 2)
-            input_surface = input_font.render(input_text, True, (0, 0, 0))
-            input_x = input_box.x + (input_box.width - input_surface.get_width()) / 2
-            input_y = input_box.y + (input_box.height - input_surface.get_height()) / 2
-            WINDOW.blit(input_surface, (input_x, input_y))
-            WINDOW.blit(text_surface, (WIDTH / 2 - text_surface.get_width() / 2, HEIGHT / 2 - 50))
-
-        pygame.display.update()
-
-    run = True
-    start_time = pygame.time.get_ticks()
-    while run:
-        current_time = pygame.time.get_ticks()
-        if current_time - start_time >= 3000:
-            main_menu()
-            run = False
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-
-        WINDOW.blit(Background, (0, 0))
-        main_menu()
-        pygame.display.update()
 def main():
 
     run = True
@@ -326,6 +253,81 @@ def display_highscores():
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         main_menu()
                         run = False
+        pygame.display.update()
+
+
+def save_name(player_name, score, level):
+    c.execute("SELECT COUNT(*) FROM players")
+    row_count = c.fetchone()[0]
+    max_rows = 9
+    if row_count >= max_rows:
+        excess_rows = row_count - max_rows + 1
+        c.execute(f"DELETE FROM players WHERE id IN (SELECT id FROM players ORDER BY id ASC LIMIT {excess_rows})")
+
+    c.execute("INSERT INTO players (name, score, level) VALUES (?, ?, ?)", (player_name, score, level))
+    conn.commit()
+    player_id = c.lastrowid
+    popup_font = pygame.font.SysFont("Arial", 30)
+    popup_text = popup_font.render("Name saved successfully!", True, (255, 255, 255))
+    WINDOW.blit(Background, (0, 0))
+    WINDOW.blit(popup_text, (WIDTH / 2 - popup_text.get_width() / 2, HEIGHT / 2 - popup_text.get_height() / 2))
+    pygame.display.update()
+    time.sleep(2)
+    return player_id
+
+def game_over(player, level):
+    run = True
+    input_box = pygame.Rect(WIDTH / 2 - 100, HEIGHT / 2, 200, 50)
+    input_box_color = (255, 255, 255)
+    input_text = ""
+    input_font = pygame.font.SysFont("Arial", 30)
+    text_surface = input_font.render("Enter your name:", True, (255, 255, 255))
+
+    name_saved = False
+
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    if input_text != "":
+                        save_name(input_text, player.score, level)
+                        name_saved = True
+                        run = False
+                elif event.key == pygame.K_BACKSPACE:
+                    input_text = input_text[:-1]
+                else:
+                    input_text += event.unicode
+
+        WINDOW.blit(Background, (0, 0))
+
+        if not name_saved:
+            pygame.draw.rect(WINDOW, input_box_color, input_box)
+            pygame.draw.rect(WINDOW, (0, 0, 0), input_box, 2)
+            input_surface = input_font.render(input_text, True, (0, 0, 0))
+            input_x = input_box.x + (input_box.width - input_surface.get_width()) / 2
+            input_y = input_box.y + (input_box.height - input_surface.get_height()) / 2
+            WINDOW.blit(input_surface, (input_x, input_y))
+            WINDOW.blit(text_surface, (WIDTH / 2 - text_surface.get_width() / 2, HEIGHT / 2 - 50))
+
+        pygame.display.update()
+
+    run = True
+    start_time = pygame.time.get_ticks()
+    while run:
+        current_time = pygame.time.get_ticks()
+        if current_time - start_time >= 3000:
+            main_menu()
+            run = False
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+        WINDOW.blit(Background, (0, 0))
+        main_menu()
         pygame.display.update()
 
 main_menu ()
